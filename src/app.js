@@ -27,7 +27,7 @@ function updateLabels(){
 function readInputs(){
   for(const element of document.querySelectorAll('[data-key]')){
     const key=element.dataset.key;
-    if(key==='seed')settings[key]=Math.max(1,Math.trunc(Number(element.value)||1));
+    if(key==='seed')settings[key]=Math.min(2147483647,Math.max(1,Math.trunc(Number(element.value)||1)));
     else if(element.type==='range')settings[key]=Number(element.value);
     else settings[key]=element.value;
   }
@@ -72,7 +72,8 @@ function doGenerate(frame=false){
     metrics(current.stats);setTexturePreview('bark-thumb',next.texturePreviews.bark);setTexturePreview('leaf-thumb',next.texturePreviews.leaf);
     syncWire();if(frame)frameTree();
     loading.classList.add('hidden');
-  }catch(e){console.error('Procedural tree generation failed:',e);loading.classList.add('hidden');showToast('Generation error: '+e.message,true);}
+    return true;
+  }catch(e){console.error('Procedural tree generation failed:',e);loading.classList.add('hidden');showToast('Generation error: '+e.message,true);return false;}
   finally{processing=false;$('generate').disabled=false;if(queued){queued=false;requestGenerate(0);}}
 }
 function requestGenerate(ms=180){clearTimeout(scheduled);scheduled=setTimeout(()=>doGenerate(false),ms);}
@@ -116,8 +117,14 @@ async function exportGLB(){
     showToast('Packing geometry and texture maps into GLB…');
     const exporter=new GLTFExporter();
     const data=await exporter.parseAsync(current.group,{binary:true,onlyVisible:true,maxTextureSize:2048,trs:true});
+    // Fail rather than claiming a successful download when glTF output is invalid.
+    if(!(data instanceof ArrayBuffer)||data.byteLength<2000)throw new Error('Empty or invalid GLB output');
+    const header=new DataView(data);
+    if(header.getUint32(0,true)!==0x46546c67||header.getUint32(4,true)!==2||header.getUint32(8,true)!==data.byteLength){
+      throw new Error('GLB header validation failed');
+    }
     downloadBlob(data,`T2_Littleleaf_Palo_Verde_${settings.seed}_${settings.height.toFixed(2)}m.glb`,'model/gltf-binary');
-    showToast('GLB exported with embedded PBR materials.');
+    showToast(`Valid GLB exported (${(data.byteLength/1048576).toFixed(2)} MB; PBR materials embedded).`);
   }catch(e){console.error(e);showToast('GLB export failed: '+e.message,true);}
   finally{if(original){showWire=true;syncWire();}btn.disabled=false;}
 }
@@ -137,13 +144,23 @@ function registerEvents(){
   for(const element of document.querySelectorAll('[data-key]')){
     element.addEventListener(element.type==='range'?'input':'change',()=>{readInputs();requestGenerate(element.type==='range'?200:0);});
   }
-  $('reseed').addEventListener('click',()=>{settings.seed=Math.floor(Math.random()*2147483646)+1;syncInputs();doGenerate(false);showToast('New variation generated.');});
-  $('generate').addEventListener('click',()=>{clearTimeout(scheduled);doGenerate(false);showToast('Tree regenerated with current parameters.');});
-  $('reset').addEventListener('click',()=>{Object.assign(settings,DEFAULTS);syncInputs();doGenerate(true);showToast('Original T2 preset restored.');});
+  $('reseed').addEventListener('click',()=>{settings.seed=Math.floor(Math.random()*2147483646)+1;syncInputs();if(doGenerate(false))showToast('New variation generated.');});
+  $('generate').addEventListener('click',()=>{clearTimeout(scheduled);if(doGenerate(false))showToast('Tree regenerated with current parameters.');});
+  $('reset').addEventListener('click',()=>{Object.assign(settings,DEFAULTS);syncInputs();if(doGenerate(true))showToast('Original T2 preset restored.');});
   $('export-glb').addEventListener('click',exportGLB);$('export-png').addEventListener('click',exportPNG);$('export-json').addEventListener('click',exportJSON);
   document.addEventListener('keydown',e=>{if(e.target instanceof HTMLInputElement||e.target instanceof HTMLSelectElement)return;
     if(e.key.toLowerCase()==='f')frameTree();if(e.key.toLowerCase()==='r')doGenerate(false);
   });
 }
-try {initScene();registerEvents();syncInputs();doGenerate(true);window.__CANOPY_APP__={settings,getStats:()=>current?.stats,regenerate:()=>doGenerate(false)};}
+try {initScene();registerEvents();syncInputs();doGenerate(true);
+  // Stable, read-only-friendly test hooks for verifying multiple seeded variants.
+  window.__CANOPY_APP__={settings,getStats:()=>current?.stats,regenerate:()=>doGenerate(false),
+    setParameters:(values)=>{for(const [key,value] of Object.entries(values)){
+      const el=document.querySelector(`[data-key="${key}"]`);
+      if(!el)continue;
+      if(el.type==='range')el.value=Math.max(Number(el.min),Math.min(Number(el.max),Number(value)));
+      else el.value=value;
+    }readInputs();return doGenerate(true)?{...current.stats}:null;}
+  };
+}
 catch(e){console.error(e);loading.innerHTML='<div class="loading-logo">!</div><strong>3D VIEWER UNAVAILABLE</strong><span>Please enable WebGL or use an up-to-date desktop browser.</span>';showToast(e.message,true);}
