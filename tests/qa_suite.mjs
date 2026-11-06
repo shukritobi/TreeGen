@@ -79,6 +79,16 @@ for(const test of scenarios){
   assert(tree.stats.branches>50,'branches: '+test.name);
   assert(tree.stats.width>1.5 && tree.stats.depth>1.5,'bounding box: '+test.name);
   assert(outwardRatio(tree.group.children[0].geometry)>.995,'inward tube faces: '+test.name);
+  // SketchUp importer compatibility: foliage has opaque shaped geometry,
+  // not rectangular alpha-cutout cards.
+  const foliage=tree.group.children.find(x=>x.name==='Compound_Leaflets');
+  if(tree.stats.leaflets>0){
+    assert(foliage, 'missing shaped foliage mesh');
+    assert.equal(foliage.geometry.attributes.position.array.length/3,tree.stats.leaflets*5,'leaf silhouette vertex count');
+    assert.equal(foliage.geometry.index.length/3,tree.stats.leaflets*4,'leaf silhouette triangle count');
+    assert.equal(foliage.material.transparent,false,'foliage should be opaque');
+    assert.equal(foliage.material.alphaTest,0,'foliage should not rely on alpha cutouts');
+  }
   for(const mesh of tree.group.children){
     const g=mesh.geometry,pos=g.attributes.position.array;
     assert(g.index.length%3===0 && g.index.every(i=>i>=0&&i<pos.length/3),'bad mesh indexing: '+test.name);
