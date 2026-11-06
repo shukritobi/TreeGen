@@ -74,9 +74,9 @@
         <div class="panel-heading"><span class="tiny-label">ASSET INSPECTOR</span><span class="inspector-icon">◈</span></div>
         <div class="inspector-intro"><span class="eyebrow">SPECIMEN / T2</span><h2>Tree anatomy<span>.</span></h2><p>One fully procedural asset. Tunable branch architecture and embedded texture maps.</p></div>
         <div class="inspector-section"><div class="inspector-title">MODEL METRICS <span>01—05</span></div><div class="metric-grid"><div class="metric"><b id="stat-height">6.10</b><span>HEIGHT / M</span></div><div class="metric"><b id="stat-width">—</b><span>SPREAD / M</span></div><div class="metric"><b id="stat-branches">—</b><span>BRANCHES</span></div><div class="metric"><b id="stat-leaves">—</b><span>LEAFLETS</span></div></div><div class="triangles-line"><span>TRIANGLE COUNT</span><b id="stat-tris">—</b></div><div class="triangles-line"><span>THORN DETAILS</span><b id="stat-thorns">—</b></div></div>
-        <div class="inspector-section"><div class="inspector-title">PROCEDURAL MATERIALS <span>PBR</span></div><div class="texture-card"><canvas id="bark-thumb" width="128" height="128" aria-label="Generated green bark texture preview"></canvas><div><b>LIVING GREEN BARK</b><small>ALBEDO · NORMAL · ROUGHNESS</small><span class="tiny-green">GENERATED MAPS</span></div></div><div class="texture-card"><canvas id="leaf-thumb" width="128" height="128" aria-label="Generated leaflet texture preview"></canvas><div><b>COMPOUND LEAFLET</b><small>ALPHA CUTOUT · ROUGHNESS</small><span class="tiny-green">GENERATED MAPS</span></div></div><p class="material-note">All textures are synthesized locally. No reference photographs or purchased image assets are embedded.</p></div>
-        <div class="inspector-section export-section"><div class="inspector-title">EXPORT MODEL <span>01/01</span></div><button id="export-glb" class="button export"><span class="download-symbol">↓</span><span><b>EXPORT 3D MODEL</b><small>GLB · EMBEDDED PBR TEXTURES</small></span><span class="arrow-symbol">↗</span></button><div class="secondary-buttons"><button id="export-png">SAVE PNG VIEW</button><button id="export-json">SAVE RECIPE JSON</button></div><p class="material-note">GLB is in metres and Y-up. For SketchUp, import through a compatible glTF workflow or convert via Blender.</p></div>
-        <div class="project-foot"><div class="foot-mark">✳</div><div><b>DESERT PALISADES · STEVE</b><span>SPECIMEN T2 / INITIAL R&amp;D BUILD</span></div></div>
+        <div class="inspector-section"><div class="inspector-title">PROCEDURAL MATERIALS <span>PBR</span></div><div class="texture-card"><canvas id="bark-thumb" width="128" height="128" aria-label="Generated green bark texture preview"></canvas><div><b>LIVING GREEN BARK</b><small>ALBEDO · NORMAL · ROUGHNESS</small><span class="tiny-green">GENERATED MAPS</span></div></div><div class="texture-card"><canvas id="leaf-thumb" width="128" height="128" aria-label="Generated leaflet texture preview"></canvas><div><b>COMPOUND LEAFLET</b><small>OPAQUE LEAF MESH · PBR</small><span class="tiny-green">GENERATED MAPS</span></div></div><p class="material-note">All textures are synthesized locally. No reference photographs or purchased image assets are embedded.</p></div>
+        <div class="inspector-section export-section"><div class="inspector-title">EXPORT MODEL <span>01/01</span></div><button id="export-glb" class="button export"><span class="download-symbol">↓</span><span><b>EXPORT 3D MODEL</b><small>GLB · OPAQUE LEAF MESH + PBR</small></span><span class="arrow-symbol">↗</span></button><div class="secondary-buttons"><button id="export-png">SAVE PNG VIEW</button><button id="export-json">SAVE RECIPE JSON</button></div><p class="material-note">GLB is in metres and Y-up. SketchUp 2026: use File > Import > GLB. Leaflet silhouettes are real geometry, with no alpha cards.</p></div>
+        <div class="project-foot"><div class="foot-mark">✳</div><div><b>DESERT PALISADES · STEVE</b><span>SPECIMEN T2 / SKETCHUP COMPATIBLE BUILD</span></div></div>
       </aside>
     </div>
   </div>
@@ -175,11 +175,14 @@ function makeLeafTextures(seed) {
   const leaf=canvasPixels(w,h,(x,y)=>{
     const u=(x-w*.5)/(w*.5), v=(y-h*.5)/(h*.5);
     // Symmetrical small elliptic leaflet with an analytic alpha silhouette.
-    const r=u*u*1.03+v*v*1.12; const a=clamp((1.0-r)*24,0,1);
-    const stripe=Math.exp(-Math.abs(u)*47)*(0.13+0.1*Math.cos(v*15));
+    // An OPAQUE leaf-surface map. The silhouette is real polygon geometry,
+    // never an alpha-cutout rectangle, because SketchUp's glTF importer may
+    // discard foliage-card alpha and display the entire underlying quad.
+    const r=u*u*1.03+v*v*1.12;
+    const stripe=Math.exp(-Math.abs(u)*35)*(0.07+0.05*Math.cos(v*13));
     const n=periodicNoise(x/32,y/32,8,8,seed+51)-.5;
-    const edge=0.12*Math.max(0,r-.6);
-    return [Math.round(124+stripe*90+20*n-edge*70),Math.round(151+stripe*67+18*n-edge*60),Math.round(71+stripe*39+12*n),Math.round(a*255)];
+    const edge=0.09*Math.max(0,r-.4);
+    return [Math.round(124+stripe*90+20*n-edge*70),Math.round(151+stripe*67+18*n-edge*60),Math.round(71+stripe*39+12*n),255];
   });
   const roughness=canvasPixels(w,h,(x,y)=>{const v=220+22*periodicNoise(x/32,y/32,8,8,seed);return [v,v,v,255];});
   return {color:canvasTexture(leaf,true),roughness:canvasTexture(roughness),previews:{leaf:leaf.toDataURL('image/png')}};
@@ -191,17 +194,30 @@ class GeometryWriter {
   tri(a,b,c){this.indices.push(a,b,c);}
   mesh(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(this.positions,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(this.normals,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(this.uv,2));g.setAttribute('color',new THREE.Float32BufferAttribute(this.colors,3));g.setIndex(this.indices);g.computeBoundingSphere();return g;}
 }
-function appendTube(writer, points, startRadius, endRadius, sides, color, uvScale=1) {
-  const base=writer.positions.length/3;const n=points.length;
+function appendTube(writer, points, startRadius, endRadius, sides, color, uvScale=1, rootFlare=0) {
+  const base=writer.positions.length/3, n=points.length;
   if(n<2)return;
-  let lengthAlong=0;
+  let lengthAlong=0, previousRight=null;
   for(let i=0;i<n;i++) {
     const tangent=points[Math.min(n-1,i+1)].clone().sub(points[Math.max(0,i-1)]).normalize();
     if(tangent.lengthSq()<1e-8)tangent.set(0,1,0);
-    const helper=Math.abs(tangent.y)<.93?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0);
-    const right=new THREE.Vector3().crossVectors(tangent,helper).normalize();
+    // Parallel-transport the frame between rings. Recreating the basis from
+    // an up-vector on every section caused 90-degree discontinuities,
+    // twisted branch strips and faceted protrusions in SketchUp.
+    let right;
+    if(previousRight){
+      right=previousRight.clone().addScaledVector(tangent,-(previousRight.x*tangent.x+previousRight.y*tangent.y+previousRight.z*tangent.z));
+      if(right.lengthSq()<.00001)right=null;
+    }
+    if(!right){
+      const helper=Math.abs(tangent.y)<.93?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0);
+      right=new THREE.Vector3().crossVectors(tangent,helper);
+    }
+    right.normalize(); previousRight=right;
     const forward=new THREE.Vector3().crossVectors(tangent,right).normalize();
-    const t=i/(n-1), radius=Math.max(0.0003,startRadius*(1-t)+endRadius*t);
+    const t=i/(n-1);
+    const flare=1+rootFlare*Math.pow(1-t,7);
+    const radius=Math.max(0.00025,(startRadius*(1-t)+endRadius*t)*flare);
     if(i>0) lengthAlong+=points[i].distanceTo(points[i-1]);
     for(let k=0;k<=sides;k++) {
       const a=2*Math.PI*k/sides;
@@ -211,8 +227,6 @@ function appendTube(writer, points, startRadius, endRadius, sides, color, uvScal
   }
   for(let i=0;i<n-1;i++)for(let k=0;k<sides;k++){
     const a=base+i*(sides+1)+k,b=a+sides+1;
-    // CCW outward-facing triangles, consistent with the radial vertex normals.
-    // The previous winding was inverted and caused front-face culling on branches.
     writer.tri(a,a+1,b);writer.tri(a+1,b+1,b);
   }
 }
@@ -229,17 +243,38 @@ function makePath(start,dir,len,sections,gnarl,rng,upWeight=0.15) {
 }
 const pointAt=(points,t)=>{ const x=clamp(t,0,1)*(points.length-1);const k=Math.min(points.length-2,Math.floor(x));return points[k].clone().lerp(points[k+1],x-k); };
 const tangentAt=(points,t)=>{const k=Math.min(points.length-2,Math.floor(clamp(t,0,1)*(points.length-1)));return points[k+1].clone().sub(points[k]).normalize();};
-function createLeafCard(writer, origin, direction, width, length, color, rng) {
+// Thin, gently curved ovate polygon: no transparency, no rectangular card.
+// This outline remains intact after GLB import into SketchUp and D5.
+function createLeafletMesh(writer, origin, direction, width, length, color, rng) {
   const dir=direction.clone().normalize();
-  const right=new THREE.Vector3().crossVectors(dir,new THREE.Vector3(rand(rng,-1,1),rand(rng,-1,1),rand(rng,-1,1))).normalize();
-  if(right.lengthSq()<1e-6)right.set(1,0,0);
+  let reference=new THREE.Vector3(rand(rng,-1,1),rand(rng,-1,1),rand(rng,-1,1));
+  let right=new THREE.Vector3().crossVectors(dir,reference);
+  if(right.lengthSq()<.00001){reference=new THREE.Vector3(0,1,0);right=new THREE.Vector3().crossVectors(dir,reference);}
+  if(right.lengthSq()<.00001)right.set(1,0,0);
+  right.normalize();
   const normal=new THREE.Vector3().crossVectors(right,dir).normalize();
-  const near=origin.clone(), tip=origin.clone().addScaledVector(dir,length);
-  const p0=near.clone().addScaledVector(right,-width*.47),p1=near.clone().addScaledVector(right,width*.47);
-  const p2=tip.clone().addScaledVector(right,width*.45),p3=tip.clone().addScaledVector(right,-width*.45);
-  const a=writer.vert(p0,normal,[0,0],color), b=writer.vert(p1,normal,[1,0],color);
-  const c=writer.vert(p2,normal,[1,1],color), d=writer.vert(p3,normal,[0,1],color);
-  writer.tri(a,b,d);writer.tri(b,c,d);
+  const tip=origin.clone().addScaledVector(dir,length);
+  const widest=width*.48;
+  const left=origin.clone().addScaledVector(dir,length*.51).addScaledVector(right,-widest);
+  const opposite=origin.clone().addScaledVector(dir,length*.51).addScaledVector(right,widest);
+  const mid=origin.clone().addScaledVector(dir,length*.47).addScaledVector(normal,length*.055);
+  const surfaceColor=[color[0]*.96,color[1]*.98,color[2]*.96];
+  const a=writer.vert(origin,normal,[.5,0],surfaceColor);
+  const b=writer.vert(left,normal,[0,.5],color);
+  const c=writer.vert(tip,normal,[.5,1],color);
+  const d=writer.vert(opposite,normal,[1,.5],color);
+  const e=writer.vert(mid,normal,[.5,.48],color);
+  writer.tri(a,b,e);writer.tri(b,c,e);writer.tri(c,d,e);writer.tri(d,a,e);
+}
+function attachToParent(points,t,outward,rootRadius,tipRadius){
+  const center=pointAt(points,t),axis=tangentAt(points,t);
+  let normal=outward.clone().addScaledVector(axis,-(outward.x*axis.x+outward.y*axis.y+outward.z*axis.z));
+  if(normal.lengthSq()<.00001)normal=new THREE.Vector3().crossVectors(axis,new THREE.Vector3(1,0,0));
+  if(normal.lengthSq()<.00001)normal.set(0,0,1);
+  const r=rootRadius*(1-t)+tipRadius*t;
+  // Enter slightly into the parent tube so the child root has a natural
+  // overlapping shoulder, not a disconnected or end-capped cylinder.
+  return center.addScaledVector(normal.normalize(),r*.76);
 }
 function disposeTextures(p){for(const k of ['color','normal','roughness'])p[k]?.dispose();}
 
@@ -264,13 +299,13 @@ function generateTree(input={}) {
   stats.densityBudget=Number(densityBudget.toFixed(3));
   const addBranch=(points,rad,rEnd,level)=>{
     const sides=Math.max(4,Math.round(quality.tubeSides*(level>2?.72:1)));
-    appendTube(wood,points,rad,rEnd,sides,level<1?palettes.base:level<3?palettes.large:palettes.small,Math.max(.045,rad*4));
+    appendTube(wood,points,rad,rEnd,sides,level<1?palettes.base:level<3?palettes.large:palettes.small,Math.max(.045,rad*4),level>0?.32:0);
     stats.branches++;
   };
   // A rachis carries 4–8 paired small leaflets, as documented for P. microphylla.
   function addFoliageSpray(origin,forward){
     if(foliageRng()>wantLeaves)return;
-    const nPairs=Math.round(rand(foliageRng,4,9)), length=rand(foliageRng,.08,.17);
+    const nPairs=Math.round(rand(foliageRng,4,8)), length=rand(foliageRng,.025,.052);
     const dir=forward.clone().add(new THREE.Vector3(rand(foliageRng,-.3,.3),rand(foliageRng,-.08,.35),rand(foliageRng,-.3,.3))).normalize();
     const end=origin.clone().addScaledVector(dir,length);
     appendTube(wood,[origin,origin.clone().lerp(end,.5),end],.0023,.0007,4,palettes.small,.12);
@@ -281,10 +316,12 @@ function generateTree(input={}) {
       for(const sign of [-1,1]){
         if(foliageRng()>clamp(wantLeaves*1.25,0,1))continue;
         const d=side.clone().multiplyScalar(sign).addScaledVector(dir,rand(foliageRng,.13,.46)).add(new THREE.Vector3(0,rand(foliageRng,-.24,.32),0)).normalize();
-        const size=rand(foliageRng,.012,.022)*opts.leafletSize;
+        // Approximate 3–5 mm leaflets at 100%, instead of the previous
+        // billboard-like 12–22 mm rectangles. Slider allows art direction.
+        const size=rand(foliageRng,.003,.005)*opts.leafletSize;
         const leafColor=[rand(foliageRng,.81,1.0),rand(foliageRng,.84,1.0),rand(foliageRng,.79,.96)];
         const st=stem.clone().addScaledVector(d,.004);
-        createLeafCard(leaves,st,d,size*.75,size,leafColor,foliageRng);stats.leaflets++;
+        createLeafletMesh(leaves,st,d,size*.72,size,leafColor,foliageRng);stats.leaflets++;
       }
     }
   }
@@ -298,7 +335,7 @@ function generateTree(input={}) {
       const a=i/5*Math.PI*2;
       const p=center.clone().addScaledVector(side,Math.cos(a)*.009).addScaledVector(up,Math.sin(a)*.009);
       const v=side.clone().multiplyScalar(Math.cos(a)).addScaledVector(up,Math.sin(a));
-      createLeafCard(flowers,p,v,.014,.017,i===4?[1,1,.84]:[1,.91,.44],flowerRng);stats.flowerPetals++;
+      createLeafletMesh(flowers,p,v,.014,.017,i===4?[1,1,.84]:[1,.91,.44],flowerRng);stats.flowerPetals++;
     }
   }
   // Growing from the base: individual stems spread organically, rather than a single cylindrical trunk.
@@ -308,33 +345,38 @@ function generateTree(input={}) {
     const dir=new THREE.Vector3(Math.cos(a)*rand(rng,.13,.42),1,Math.sin(a)*rand(rng,.13,.42)).normalize();
     const mainLen=rand(rng,3.15,3.8);
     const trunk=makePath(origin,dir,mainLen,quality.tubeSections+5,opts.gnarl*.6,rng,.45);
-    addBranch(trunk,rand(rng,.11,.18)/Math.sqrt(nTrunks/2),.032,0);
+    const trunkRootRadius=rand(rng,.11,.18)/Math.sqrt(nTrunks/2);
+    addBranch(trunk,trunkRootRadius,.032,0);
     const primaryCount=Math.max(2,Math.round(rand(rng,5,8)*opts.branchDensity*complexity*densityBudget));
     for(let i=0;i<primaryCount;i++){
       const t=.29+(i+rng()*.8)/primaryCount*.68;
-      const base=pointAt(trunk,t);
       const radial=(i/primaryCount)*Math.PI*2 + a + rand(rng,-.56,.56);
       const tangent=tangentAt(trunk,t);
       const v=new THREE.Vector3(Math.cos(radial)*opts.spread,rand(rng,.27,.68),Math.sin(radial)*opts.spread)
         .addScaledVector(tangent,.24).normalize();
       const length=rand(rng,1.9,2.65)*opts.spread;
-      const primary=makePath(base,v,length,quality.tubeSections+1,opts.gnarl,rng,.10);
-      addBranch(primary,rand(rng,.032,.062),.008,1);
+      const primaryBase=attachToParent(trunk,t,v,trunkRootRadius,.032);
+      const primaryRadius=rand(rng,.032,.062);
+      const primary=makePath(primaryBase,v,length,quality.tubeSections+1,opts.gnarl,rng,.10);
+      addBranch(primary,primaryRadius,.008,1);
       const secondaries=Math.max(2,Math.round(rand(rng,3.5,5.8)*complexity*densityBudget));
       for(let j=0;j<secondaries;j++){
         const t2=.25+(j+rng()*.7)/secondaries*.69;
-        const p2=pointAt(primary,t2),tan=tangentAt(primary,t2);
+        const tan=tangentAt(primary,t2);
         const spin=(j/secondaries)*Math.PI*2+radial+rand(rng,-1.1,1.1);
         const out=new THREE.Vector3(Math.cos(spin),rand(rng,.15,.65),Math.sin(spin))
           .addScaledVector(tan,.7).normalize();
+        const p2=attachToParent(primary,t2,out,primaryRadius,.008);
+        const secondaryRadius=rand(rng,.011,.020);
         const secondary=makePath(p2,out,rand(rng,.78,1.36),Math.max(5,quality.tubeSections-1),opts.gnarl,rng,.07);
-        addBranch(secondary,rand(rng,.011,.020),.0031,2);
+        addBranch(secondary,secondaryRadius,.0031,2);
         const twigs=Math.max(1,Math.round(rand(rng,2.3,4.8)*quality.twigFactor*complexity*densityBudget));
         for(let k=0;k<twigs;k++){
           const t3=.33+(k+rng()*.6)/twigs*.64;
-          const p3=pointAt(secondary,t3),tan3=tangentAt(secondary,t3);
+          const tan3=tangentAt(secondary,t3);
           const turn=rand(rng,0,Math.PI*2);
           const b=new THREE.Vector3(Math.cos(turn)*.7,rand(rng,.12,.85),Math.sin(turn)*.7).addScaledVector(tan3,.85).normalize();
+          const p3=attachToParent(secondary,t3,b,secondaryRadius,.0031);
           const twig=makePath(p3,b,rand(rng,.28,.67),Math.max(4,quality.tubeSections-2),opts.gnarl,rng,.05);
           addBranch(twig,.0048,.0007,3);stats.terminalTwigs++;
           // Thorns occasionally emerge near twig axils.
@@ -358,7 +400,7 @@ function generateTree(input={}) {
   const bark=makeBarkTextures(opts.seed),leaf=makeLeafTextures(opts.seed);
   const woodGeometry=wood.mesh(),leafGeometry=leaves.mesh(),flowerGeometry=flowers.mesh();
   const barkMat=new THREE.MeshStandardMaterial({name:'PaloVerde_LivingBark_PBR',map:bark.color,normalMap:bark.normal,normalScale:new THREE.Vector2(.19,.19),roughnessMap:bark.roughness,roughness:1,vertexColors:true,metalness:0});
-  const leafMat=new THREE.MeshStandardMaterial({name:'PaloVerde_Leaflet_AlphaPBR',map:leaf.color,roughnessMap:leaf.roughness,roughness:1,vertexColors:true,transparent:false,alphaTest:.39,side:THREE.DoubleSide,metalness:0});
+  const leafMat=new THREE.MeshStandardMaterial({name:'PaloVerde_Leaflet_OpaqueGeometry_PBR',map:leaf.color,roughnessMap:leaf.roughness,roughness:1,vertexColors:true,transparent:false,alphaTest:0,side:THREE.DoubleSide,metalness:0});
   const flowerMat=new THREE.MeshStandardMaterial({name:'PaloVerde_PaleYellow_Flowers',color:0xffffd2,roughness:.85,vertexColors:true,side:THREE.DoubleSide});
   const group=new THREE.Group();group.name=`T2_Littleleaf_Palo_Verde_${opts.seed}`;
   function mesh(geo,mat,name){const m=new THREE.Mesh(geo,mat);m.name=name;m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
