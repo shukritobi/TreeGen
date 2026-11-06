@@ -1,0 +1,47 @@
+name: Validate TreeGen static app
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify HTML, UI controls and Three.js integration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          class Parser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.ids = set()
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if 'id' in attrs:
+                      assert attrs['id'] not in self.ids, f"Duplicate UI ID: {attrs['id']}"
+                      self.ids.add(attrs['id'])
+          parser = Parser()
+          parser.feed(html)
+          ids = ['viewer', 'generate', 'export-glb', 'export-png', 'export-json',
+                 'bark-thumb', 'leaf-thumb', 'stat-branches', 'stat-leaves']
+          for ident in ids:
+              assert ident in parser.ids, f"Missing UI control: {ident}"
+          for feature in ['GLTFExporter', 'three@0.174.0', 'Parkinsonia microphylla',
+                          'appendTube', 'makeBarkTextures', 'makeLeafTextures']:
+              assert feature in html, f"Missing feature: {feature}"
+          scripts = re.findall(r'<script\s+type="module"\s*>(.*?)</script>', html, re.S)
+          assert scripts, "Missing standalone JavaScript module"
+          Path('/tmp/treegen.js').write_text(scripts[-1], encoding='utf-8')
+          print(f'PASS TreeGen HTML smoke checks ({len(parser.ids)} unique controls)')
+          PY
+          node --check --input-type=module < /tmp/treegen.js
