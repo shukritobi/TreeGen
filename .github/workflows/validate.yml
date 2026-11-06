@@ -45,3 +45,11 @@ jobs:
           print(f'PASS TreeGen HTML smoke checks ({len(parser.ids)} unique controls)')
           PY
           node --check --input-type=module < /tmp/treegen.js
+
+      - name: Verify source geometry and published page
+        run: |
+          python3 tests/static_test.py
+          python3 tests/standalone_test.py
+          node tests/engine_test.mjs
+          node --check --input-type=module < src/app.js
+          node --check --input-type=module < src/tree.js
