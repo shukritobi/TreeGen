@@ -16,9 +16,12 @@ for token in ['viewer','generate','export-glb','bark-thumb','leaf-thumb','stat-t
     assert token in p.ids, f'missing element: {token}'
 for token in ['GLTFExporter','parseAsync','downloadBlob','generateTree','reset','exportPNG']:
     assert token in app, f'missing client action: {token}'
-for token in ['appendTube','makeBarkTextures','makeLeafTextures','createLeafCard','stats.height','group.scale.setScalar']:
+for token in ['appendTube','makeBarkTextures','makeLeafTextures','createLeafletMesh','stats.height','group.scale.setScalar']:
     assert token in js, f'missing generator logic: {token}'
 assert 'Parkinsonia microphylla' in js
+assert 'transparent:false,alphaTest:0' in js, 'Opaque foliage material required for SketchUp'
+assert 'writer.tri(a,b,e);writer.tri(b,c,e)' in js, 'Leaf silhouette must use polygon triangles'
+assert 'previousRight' in js, 'Parallel transported branch rings required'
 assert '0.174.0' in html
 assert ':root' in css
 assert all((ROOT / fp).exists() for fp in ['index.html','styles.css','src/tree.js','src/app.js','favicon.svg','.nojekyll','README.md'])
