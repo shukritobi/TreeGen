@@ -1,32 +1,48 @@
-# TreeGen — Canopy Studio
+# TreeGen · Canopy Studio
 
-Procedural 3D tree generator for architectural visualization, initially built for Steve's Desert Palisades project.
+Live website: https://shukritobi.github.io/TreeGen/
 
-## First species
+An original procedural 3D tree generator for Steve's Desert Palisades architectural visualizations. The first specimen is **T2 Littleleaf Palo Verde** (*Parkinsonia microphylla*, provisional botanical identification), with a specified target height of **6.10 metres / 20 feet**.
 
-**T2 Littleleaf Palo Verde** — likely `Parkinsonia microphylla` (provisional botanical identity). Height preset: **6.10 m / 20 ft**.
+## Features
 
-The browser app generates multiple trunks, tapered 3D branch/twig meshes, thorns, tiny compound leaflets, and optional flowers. Change the seed, spread, branching, foliage, season or quality, then export a **GLB with embedded procedural PBR maps**, PNG screenshot or JSON recipe.
+- Seed-based generation of real 3D trunks, primary/secondary branches, twigs, thorns, leaf stems and individual paired leaflets.
+- Parametric height, multi-trunk structure, crown spread, branch density, twig complexity and gnarl.
+- Dry/after-rain foliage states, leaflet density and optional yellow blossoms. Changing foliage, flowers or season preserves the wood structure for a given seed.
+- Procedural bark albedo, normal and roughness maps, plus leaf alpha and roughness maps.
+- Draft, presentation and high-detail modes, with an adaptive geometry budget at extreme settings.
+- GLB export with embedded materials, PNG viewport export and JSON recipe exports.
+- Entirely browser-based with no backend, paid API, secrets or project photographs.
 
-## Website
+This is **not an exact botanical scan**. Compare the crown silhouette with Russell and Steve's reference photos before using this asset for final botanical fidelity.
 
-**https://shukritobi.github.io/TreeGen/**
+## GitHub Pages and development
 
-This address becomes live once GitHub Pages publishing is enabled:
+Publish source: branch **main**, folder **/(root)**. GitHub Pages serves the root index.html with embedded CSS and JavaScript. Three.js 0.174.0 modules are loaded from jsDelivr, so a WebGL-capable browser with internet access is required.
 
-1. Open [TreeGen → Settings → Pages](https://github.com/shukritobi/TreeGen/settings/pages).
-2. Under **Build and deployment**, choose **Source: Deploy from a branch**.
-3. Set **Branch: main**, **Folder: /(root)**, then click **Save**.
-4. GitHub will publish the website from `index.html`, and subsequent commits to `main` will update it.
+Editable sources are kept in src/tree.js, src/app.js and styles.css. Serve locally:
 
-## Architecture
+    python3 -m http.server 8000
 
-The deployed page is `index.html`, a self-contained static site using Three.js 0.174.0 via jsDelivr. No build tool, API key or server is needed; an internet connection is required for CDN modules.
+Navigate to http://localhost:8000/modular.html. Rebuild the self-contained index.html after changing source:
 
-**Exports:** `.glb` models use metres and Y-up (glTF); open/convert in Blender or import with a SketchUp-compatible glTF importer. The browser cannot directly export native `.skp`.
+    python3 scripts/build.py
 
-**Research references:** [EZ-Tree](https://github.com/dgreenheck/ez-tree), [SeedThree](https://github.com/SkyeShark/SeedThree), [Three.js GLTFExporter](https://threejs.org/docs/pages/GLTFExporter.html).
+## Tests
 
-This is an independently implemented parametric approximation, not a scanned tree. Verify the botanical species against Russell's actual planting photographs before final production use.
+    python3 tests/static_test.py
+    python3 tests/standalone_test.py
+    node tests/engine_test.mjs
+    node tests/qa_suite.mjs
 
-No images from Steve's correspondence are embedded in this public repository.
+The nine-variant regression suite checks 3D height, valid triangle indices, finiteness, outward-facing tube normals, deterministic woody structure across foliage/flower/season changes, and a geometry budget for extreme settings. Continuous integration checks the published page matches the source.
+
+Local browser QA hooks: window.__CANOPY_APP__.getStats() and window.__CANOPY_APP__.setParameters({...}).
+
+Full findings: [QA_REPORT.md](QA_REPORT.md).
+
+## Export notes
+
+GLB uses metres and Y-up, with bark and leaf materials embedded. Import through a glTF-capable application such as Blender before bringing it into SketchUp. The generator does not export native SKP.
+
+Research: [EZ-Tree](https://github.com/dgreenheck/ez-tree), [SeedThree](https://github.com/SkyeShark/SeedThree), [Three.js GLTFExporter](https://threejs.org/docs/pages/GLTFExporter.html).
