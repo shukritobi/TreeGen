@@ -126,7 +126,9 @@ function appendTube(writer, points, startRadius, endRadius, sides, color, uvScal
   }
   for(let i=0;i<n-1;i++)for(let k=0;k<sides;k++){
     const a=base+i*(sides+1)+k,b=a+sides+1;
-    writer.tri(a,b,a+1);writer.tri(a+1,b,b+1);
+    // CCW outward-facing triangles, consistent with the radial vertex normals.
+    // The previous winding was inverted and caused front-face culling on branches.
+    writer.tri(a,a+1,b);writer.tri(a+1,b+1,b);
   }
 }
 function makePath(start,dir,len,sections,gnarl,rng,upWeight=0.15) {
@@ -159,13 +161,22 @@ function disposeTextures(p){for(const k of ['color','normal','roughness'])p[k]?.
 export function generateTree(input={}) {
   const opts={...DEFAULTS,...input};
   const quality=QUALITY[opts.quality]||QUALITY.presentation;
-  const rng=mulberry32(opts.seed);const wood=new GeometryWriter(),leaves=new GeometryWriter(),flowers=new GeometryWriter();
+  // Independent random streams keep the woody silhouette stable while changing
+  // foliage density, bloom, or dry-season state for the *same seed*.
+  const rng=mulberry32(opts.seed);
+  const foliageRng=mulberry32((Number(opts.seed) ^ 0x9E3779B9) >>> 0);
+  const flowerRng=mulberry32((Number(opts.seed) ^ 0x85EBCA6B) >>> 0);
+  const wood=new GeometryWriter(),leaves=new GeometryWriter(),flowers=new GeometryWriter();
   const palettes={base:[0.96,0.99,0.81],large:[0.82,0.93,0.75],small:[0.75,0.97,0.75]};
   const stats={trunks:opts.trunks,branches:0,terminalTwigs:0,leaflets:0,flowerPetals:0,thorns:0,triangles:0,vertices:0,height:opts.height};
   const wantLeaves=opts.foliage*(opts.season==='dry'?0.22:1.0);
   const nTrunks=clamp(Math.round(opts.trunks),1,5);
   const complexity=clamp(opts.complexity,.5,1.5);
-  const treeHeight=6.10;
+  // Keep the full parameter range available without allowing 5-trunk, max
+  // density/high-detail combinations to grow into million-triangle meshes.
+  const crowding=(nTrunks/3)*Math.max(.5,opts.branchDensity)*complexity*complexity*quality.twigFactor;
+  const densityBudget=Math.min(1,Math.sqrt(2.25/Math.max(.001,crowding)));
+  stats.densityBudget=Number(densityBudget.toFixed(3));
   const addBranch=(points,rad,rEnd,level)=>{
     const sides=Math.max(4,Math.round(quality.tubeSides*(level>2?.72:1)));
     appendTube(wood,points,rad,rEnd,sides,level<1?palettes.base:level<3?palettes.large:palettes.small,Math.max(.045,rad*4));
@@ -173,9 +184,9 @@ export function generateTree(input={}) {
   };
   // A rachis carries 4–8 paired small leaflets, as documented for P. microphylla.
   function addFoliageSpray(origin,forward){
-    if(rng()>wantLeaves)return;
-    const nPairs=Math.round(rand(rng,4,9)), length=rand(rng,.08,.17);
-    const dir=forward.clone().add(new THREE.Vector3(rand(rng,-.3,.3),rand(rng,-.08,.35),rand(rng,-.3,.3))).normalize();
+    if(foliageRng()>wantLeaves)return;
+    const nPairs=Math.round(rand(foliageRng,4,9)), length=rand(foliageRng,.08,.17);
+    const dir=forward.clone().add(new THREE.Vector3(rand(foliageRng,-.3,.3),rand(foliageRng,-.08,.35),rand(foliageRng,-.3,.3))).normalize();
     const end=origin.clone().addScaledVector(dir,length);
     appendTube(wood,[origin,origin.clone().lerp(end,.5),end],.0023,.0007,4,palettes.small,.12);
     const side=new THREE.Vector3().crossVectors(dir,new THREE.Vector3(0,1,0)).normalize();
@@ -183,17 +194,17 @@ export function generateTree(input={}) {
     for(let i=0;i<nPairs;i++){
       const t=(i+.7)/(nPairs+1),stem=origin.clone().lerp(end,t);
       for(const sign of [-1,1]){
-        if(rng()>clamp(wantLeaves*1.25,0,1))continue;
-        const d=side.clone().multiplyScalar(sign).addScaledVector(dir,rand(rng,.13,.46)).add(new THREE.Vector3(0,rand(rng,-.24,.32),0)).normalize();
-        const size=rand(rng,.012,.022)*opts.leafletSize;
-        const leafColor=[rand(rng,.81,1.0),rand(rng,.84,1.0),rand(rng,.79,.96)];
+        if(foliageRng()>clamp(wantLeaves*1.25,0,1))continue;
+        const d=side.clone().multiplyScalar(sign).addScaledVector(dir,rand(foliageRng,.13,.46)).add(new THREE.Vector3(0,rand(foliageRng,-.24,.32),0)).normalize();
+        const size=rand(foliageRng,.012,.022)*opts.leafletSize;
+        const leafColor=[rand(foliageRng,.81,1.0),rand(foliageRng,.84,1.0),rand(foliageRng,.79,.96)];
         const st=stem.clone().addScaledVector(d,.004);
-        createLeafCard(leaves,st,d,size*.75,size,leafColor,rng);stats.leaflets++;
+        createLeafCard(leaves,st,d,size*.75,size,leafColor,foliageRng);stats.leaflets++;
       }
     }
   }
   function addBlossom(origin,dir){
-    if(opts.bloom<=.001||rng()>opts.bloom*.13)return;
+    if(opts.bloom<=.001||flowerRng()>opts.bloom*.13)return;
     const center=origin.clone().addScaledVector(dir,.014);const outward=dir.clone().normalize();
     const side=new THREE.Vector3().crossVectors(outward,new THREE.Vector3(0,1,0)).normalize();
     if(side.lengthSq()<.01)side.set(1,0,0);
@@ -202,7 +213,7 @@ export function generateTree(input={}) {
       const a=i/5*Math.PI*2;
       const p=center.clone().addScaledVector(side,Math.cos(a)*.009).addScaledVector(up,Math.sin(a)*.009);
       const v=side.clone().multiplyScalar(Math.cos(a)).addScaledVector(up,Math.sin(a));
-      createLeafCard(flowers,p,v,.014,.017,i===4?[1,1,.84]:[1,.91,.44],rng);stats.flowerPetals++;
+      createLeafCard(flowers,p,v,.014,.017,i===4?[1,1,.84]:[1,.91,.44],flowerRng);stats.flowerPetals++;
     }
   }
   // Growing from the base: individual stems spread organically, rather than a single cylindrical trunk.
@@ -213,7 +224,7 @@ export function generateTree(input={}) {
     const mainLen=rand(rng,3.15,3.8);
     const trunk=makePath(origin,dir,mainLen,quality.tubeSections+5,opts.gnarl*.6,rng,.45);
     addBranch(trunk,rand(rng,.11,.18)/Math.sqrt(nTrunks/2),.032,0);
-    const primaryCount=Math.max(2,Math.round(rand(rng,5,8)*opts.branchDensity*complexity));
+    const primaryCount=Math.max(2,Math.round(rand(rng,5,8)*opts.branchDensity*complexity*densityBudget));
     for(let i=0;i<primaryCount;i++){
       const t=.29+(i+rng()*.8)/primaryCount*.68;
       const base=pointAt(trunk,t);
@@ -224,7 +235,7 @@ export function generateTree(input={}) {
       const length=rand(rng,1.9,2.65)*opts.spread;
       const primary=makePath(base,v,length,quality.tubeSections+1,opts.gnarl,rng,.10);
       addBranch(primary,rand(rng,.032,.062),.008,1);
-      const secondaries=Math.max(2,Math.round(rand(rng,3.5,5.8)*complexity));
+      const secondaries=Math.max(2,Math.round(rand(rng,3.5,5.8)*complexity*densityBudget));
       for(let j=0;j<secondaries;j++){
         const t2=.25+(j+rng()*.7)/secondaries*.69;
         const p2=pointAt(primary,t2),tan=tangentAt(primary,t2);
@@ -233,7 +244,7 @@ export function generateTree(input={}) {
           .addScaledVector(tan,.7).normalize();
         const secondary=makePath(p2,out,rand(rng,.78,1.36),Math.max(5,quality.tubeSections-1),opts.gnarl,rng,.07);
         addBranch(secondary,rand(rng,.011,.020),.0031,2);
-        const twigs=Math.max(1,Math.round(rand(rng,2.3,4.8)*quality.twigFactor*complexity));
+        const twigs=Math.max(1,Math.round(rand(rng,2.3,4.8)*quality.twigFactor*complexity*densityBudget));
         for(let k=0;k<twigs;k++){
           const t3=.33+(k+rng()*.6)/twigs*.64;
           const p3=pointAt(secondary,t3),tan3=tangentAt(secondary,t3);
