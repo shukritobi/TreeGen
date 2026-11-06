@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#17271f" />
+  <meta name="description" content="Procedural 3D desert tree generator for architectural visualization. Generate Littleleaf Palo Verde models with real branch geometry, PBR textures, and GLB export." />
+  <title>Canopy Studio | Procedural Tree Laboratory</title>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxNzI3MWYiLz48cGF0aCBkPSJNMzIgNTNWMTltMCAxOEwxMiAyMm0yMCAxMEw0OCAxMk0yMCAzMSAxMiAxMm0zMSAxMCAxMS04IiBzdHJva2U9IiNhOWM4ODkiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iNSIgZmlsbD0iI2Q1ZGY5MSIvPjxjaXJjbGUgY3g9IjQ4IiBjeT0iMTIiIHI9IjUiIGZpbGw9IiNkNWRmOTEiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjIyIiByPSI1IiBmaWxsPSIjZDVkZjkxIi8+PC9zdmc+Cg==" type="image/svg+xml" />
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+:root{font-family:'DM Sans',Arial,sans-serif;color:#1b2a23;background:#e8eae4;font-synthesis:none;-webkit-font-smoothing:antialiased;--forest:#17291f;--moss:#526f4f;--mint:#b6cb88;--line:#e6e9df;--mono:'IBM Plex Mono',monospace}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;overflow:hidden}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.52;cursor:progress}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #7aab5d;outline-offset:3px}.app{height:100dvh;min-height:570px;display:flex;flex-direction:column;background:#f6f7f4}.topbar{height:72px;min-height:72px;background:var(--forest);display:flex;align-items:center;justify-content:space-between;padding:0 26px;border-bottom:1px solid rgba(255,255,255,.12);color:#f8faef;gap:20px}.brand{display:flex;align-items:center;gap:12px}.brand-mark{width:41px;height:41px;border:1px solid #617a5d;display:grid;place-items:center;border-radius:8px;color:#c4db97;background:#24382a}.brand-name{font-weight:800;letter-spacing:-.07em;font-size:21px;line-height:1.05}.brand-name span{color:#bdd894;letter-spacing:-.06em}.brand-sub{margin-top:5px;color:#849b87;font:9px var(--mono);letter-spacing:1.4px}.brand-sub b{color:#bdd894}.top-right{display:flex;align-items:center;gap:20px;font:10px var(--mono);letter-spacing:.7px}.project-tag{border:1px solid #53675a;padding:10px 11px;color:#d4e0cc}.vert-sep{height:24px;width:1px;background:#425449}.save-indicator{display:flex;align-items:center;gap:8px;color:#d3dbcd}.dot,.pulse,.ribbon-dot{width:7px;height:7px;background:#afd47e;border-radius:50%;display:inline-block;box-shadow:0 0 0 3px rgba(169,209,124,.13)}.top-link{color:#a9c58d;text-decoration:none}.workspace{display:grid;grid-template-columns:286px minmax(280px,1fr) 294px;flex:1;min-height:0}.left-panel,.right-panel{background:#fff;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#d7dace transparent}.left-panel{border-right:1px solid var(--line);padding:21px 20px 28px}.right-panel{border-left:1px solid var(--line);display:flex;flex-direction:column;padding:21px 20px 24px}.panel-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:17px}.tiny-label{font:10px var(--mono);letter-spacing:.8px;color:#6c7970}.count-tag{background:#eff2e9;color:#52674e;padding:6px 8px;font:9px var(--mono);letter-spacing:.5px}.species-tile{border:1px solid #dfe6d9;border-radius:7px;padding:12px;display:flex;gap:10px;background:#f5f8f0;align-items:center}.tree-glyph{width:44px;height:48px;display:grid;place-items:center;background:#dce8d4;color:#527451;font-size:29px;border-radius:4px}.species-tile b{display:block;font-size:12px;letter-spacing:-.1px}.species-tile em{display:block;font-size:11px;color:#4c6656;margin:3px 0}.species-tile small{font:9px var(--mono);color:#7f8e7f}.block-title{display:flex;gap:10px;align-items:center;margin:27px 0 17px;font:10px var(--mono);font-weight:600;letter-spacing:1.1px;color:#203c2e}.block-title span{display:grid;place-items:center;background:#dcebd4;border-radius:3px;width:24px;height:23px;color:#4f724a}.field{margin-bottom:17px}.field>label,.field-row label{font:9px var(--mono);letter-spacing:.65px;color:#526058;font-weight:600}.field-tip{display:block;font:9px 'DM Sans',sans-serif;color:#99a398;letter-spacing:0;font-weight:400;margin-top:4px}.field-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.field output{font:10px var(--mono);color:#284b34;background:#eef4e8;border-radius:2px;padding:3px 5px}.field select{width:100%;margin-top:10px;border:1px solid #dce2d9;color:#223b2b;background:#fafbf8;padding:11px 9px;font:10px var(--mono);border-radius:3px}.field input[type=range]{width:100%;height:4px;cursor:pointer;accent-color:#668b5b;margin:12px 0 5px}.range-ends{display:flex;justify-content:space-between;color:#a0a89e;font:9px var(--mono)}.split{display:flex;align-items:center;justify-content:space-between;gap:10px}.seed-wrap{display:flex;gap:5px}.seed-wrap input{font:11px var(--mono);border:1px solid #e1e6db;background:#f9faf6;width:99px;padding:9px 7px;color:#374637}.mini-button{border:1px solid #dfe4d9;background:#f1f4ed;color:#435b49;padding:5px 9px;border-radius:2px;font-size:17px}.left-actions{padding-top:12px;display:grid;gap:9px}.button{display:flex;align-items:center;justify-content:center;border-radius:3px;border:1px solid #e1e6db;padding:14px 10px;font-size:10px;letter-spacing:.8px;font-family:var(--mono);font-weight:600}.button.solid{color:#f1f7e8;background:#2a5037;border-color:#2a5037;gap:9px}.button.solid:hover{background:#1c4029}.button.ghost{color:#59735b;background:#fff}.button.ghost:hover{background:#f1f5ee}.viewport-area{position:relative;background:#e9eee9;min-height:0;overflow:hidden}.viewer-top{position:absolute;z-index:2;left:25px;right:25px;top:23px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}.breadcrumb{font:10px var(--mono);letter-spacing:1px;color:#71827b}.breadcrumb span{margin:0 8px;color:#b2bfb6}.breadcrumb b{color:#2e4e3c;font-weight:600}.viewer-commands{display:flex;gap:6px;pointer-events:auto}.tool-icon{height:34px;width:34px;border:1px solid #d6ded4;color:#496a56;background:rgba(255,255,255,.86);font-size:21px;border-radius:3px}.tool-icon.active{background:#d9e8d7;border-color:#acbfac;color:#29543c}.tool-icon:hover{background:#e5f1df}#viewer{position:absolute;inset:0;cursor:grab}#viewer:active{cursor:grabbing}#viewer canvas{display:block;width:100%;height:100%}.canvas-overlay{position:absolute;z-index:1;pointer-events:none}.top-left{top:82px;left:27px;max-width:265px}.live-badge{font:9px var(--mono);letter-spacing:1px;color:#456b4b;background:#f0f7eb;border:1px solid #d7e7cf;border-radius:50px;padding:8px 11px;display:inline-flex;gap:9px;align-items:center}.pulse{width:6px;height:6px;animation:pulse 2s ease infinite}@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(169,209,124,0)}}.top-left h1{color:#1f382b;font-size:clamp(30px,3.4vw,55px);line-height:.99;margin:19px 0 13px;letter-spacing:-2.6px;font-weight:700}.top-left h1 i{font-weight:400;font-style:normal;color:#77966e}.top-left p{max-width:240px;font-size:11px;line-height:1.65;color:#7b9182;margin:0}.top-right{top:84px;right:26px;display:grid;gap:10px;text-align:right}.mini-meta{display:grid;gap:3px}.mini-meta span{font:8px var(--mono);color:#a1b0a2;letter-spacing:1px}.mini-meta strong{font:10px var(--mono);color:#5c7766}.bottom-left{bottom:63px;left:25px;display:flex;align-items:center;gap:14px}.bottom-left>span{color:#6a8472;font:9px var(--mono);letter-spacing:.6px}.axis-widget{width:55px;height:55px;border:1px solid #c6d2c6;background:rgba(255,255,255,.54);border-radius:50%;position:relative}.axis{position:absolute;font:10px var(--mono);font-weight:600}.axis.y{left:28px;top:8px;color:#7aa373}.axis.x{right:5px;bottom:12px;color:#aa7973}.axis.z{left:6px;bottom:10px;color:#6989a4}.bottom-right{bottom:64px;right:24px;display:flex;gap:8px;align-items:center;color:#446d50}.bottom-right b{font:19px var(--mono);display:block}.bottom-right small{font:9px var(--mono);color:#93a297}.dimension-icon{font-size:30px}.bottom-ribbon{height:38px;position:absolute;left:0;right:0;bottom:0;z-index:1;border-top:1px solid #d9e1d8;display:flex;align-items:center;gap:9px;padding:0 22px;background:rgba(236,241,235,.92);font:9px var(--mono);letter-spacing:.5px;color:#98a59a}.bottom-ribbon b{color:#4b7255;font-weight:500}.ribbon-dot{width:5px;height:5px}.ribbon-right{margin-left:auto;color:#657f6c}.loading-screen{position:absolute;inset:0;z-index:4;background:#e9eee9;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;transition:opacity .35s ease}.loading-screen.hidden{opacity:0;pointer-events:none}.loading-logo{font-size:70px;color:#7ca46a;animation:rotate 4s linear infinite}@keyframes rotate{to{transform:rotate(360deg)}}.loading-screen strong{font:12px var(--mono);color:#395e46;letter-spacing:1px}.loading-screen>span{font-size:12px;color:#8b9f8e}.toast{position:absolute;bottom:108px;left:50%;transform:translateX(-50%);color:#f6f8ee;background:#234731;padding:12px 18px;font:11px var(--mono);z-index:6;border-radius:4px;box-shadow:0 7px 25px #2b4b3544;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap}.toast.visible{opacity:1}.inspector-icon{color:#6f9770;font-size:22px}.inspector-intro{padding:0 0 15px}.eyebrow{font:9px var(--mono);letter-spacing:1px;color:#8a9e8c}.inspector-intro h2{font-size:27px;letter-spacing:-1.3px;margin:5px 0 8px;color:#1d3729}.inspector-intro h2 span{color:#89a77f}.inspector-intro p{font-size:11px;line-height:1.6;color:#819083;max-width:240px;margin:0}.inspector-section{border-top:1px solid #e7ede5;padding:19px 0 16px}.inspector-title{font:10px var(--mono);letter-spacing:.9px;color:#3e5545;font-weight:600;display:flex;justify-content:space-between;margin-bottom:15px}.inspector-title span{font-size:9px;color:#a4b0a4;font-weight:400}.metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.metric{background:#f5f7f2;padding:15px 11px;min-height:80px}.metric b{font:23px var(--mono);color:#385840;letter-spacing:-1px;display:block}.metric span{font:9px var(--mono);color:#91a095;display:block;margin-top:8px}.triangles-line{display:flex;justify-content:space-between;border-bottom:1px solid #edf0eb;padding:11px 2px;color:#91a096;font:9px var(--mono)}.triangles-line b{color:#4b6853;font-weight:500}.texture-card{display:flex;align-items:center;border:1px solid #e7ece5;margin-bottom:8px;gap:10px;padding:8px}.texture-card canvas{width:58px;height:58px;background:#c4d5bb;object-fit:cover;border-radius:2px}.texture-card b{display:block;font:10px var(--mono);color:#365241;line-height:1.4}.texture-card small{display:block;font:8px var(--mono);color:#9aa99d;line-height:1.6;margin:3px 0 5px}.tiny-green{color:#4d8f59;font:8px var(--mono)}.material-note{font-size:10px;color:#9baa9c;line-height:1.6;margin:10px 1px 0}.export-section{margin-top:1px}.button.export{width:100%;padding:13px 11px;background:#264e34;color:#f4f8ed;justify-content:space-between;text-align:left;border:0;gap:10px}.download-symbol{font-size:25px}.button.export b{display:block;font:10px var(--mono);letter-spacing:.5px}.button.export small{display:block;color:#abc8a8;font:8px var(--mono);margin-top:4px;letter-spacing:0}.arrow-symbol{font-size:17px;color:#b8dca8}.button.export:hover{background:#173d25}.secondary-buttons{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}.secondary-buttons button{padding:11px 6px;border:1px solid #dfe7de;background:#f7f9f5;color:#46664d;font:9px var(--mono)}.secondary-buttons button:hover{background:#e9f1e4}.project-foot{border-top:1px solid #e3eae2;margin-top:auto;padding:22px 0 0;display:flex;align-items:center;gap:10px}.foot-mark{font-size:27px;color:#90ab89}.project-foot b{font:9px var(--mono);color:#5b745d;display:block}.project-foot span{display:block;font:8px var(--mono);color:#9dad9a;margin-top:4px}
+@media (max-width:1180px){.workspace{grid-template-columns:244px minmax(270px,1fr) 242px}.left-panel,.right-panel{padding-left:14px;padding-right:14px}.top-right{display:none}.top-left h1{font-size:35px}.top-right.canvas-overlay{display:none}}
+@media (max-width:820px){html,body{overflow:auto}.app{height:auto;min-height:100dvh}.workspace{display:flex;flex-direction:column}.topbar{height:62px;min-height:62px;padding:0 16px}.left-panel{order:2;overflow:visible;border:0;border-top:1px solid #d9e4d7}.right-panel{order:3;overflow:visible;border:0;border-top:1px solid #d9e4d7}.viewport-area{order:1;min-height:63vh;height:580px}.top-left{top:80px;left:17px}.top-left h1{font-size:35px}.top-left p{max-width:200px}.viewer-top{left:17px;right:17px;top:19px}.breadcrumb{font-size:8px}.bottom-left{left:14px;bottom:58px}.bottom-left>span{font-size:7px}.bottom-right{right:15px;bottom:66px}.left-panel .field{max-width:100%}.metric-grid{grid-template-columns:repeat(4,1fr)}.metric{min-height:68px}.metric b{font-size:18px}.metric span{font-size:8px}.project-foot{margin-top:20px}}
+@media (max-width:420px){.top-left h1{font-size:30px}.top-left p{max-width:172px}.top-left{top:80px}.bottom-left>span{display:none}.bottom-ribbon{padding:0 11px}.bottom-ribbon span:nth-last-child(2){display:none}.metric-grid{grid-template-columns:repeat(2,1fr)}.viewport-area{height:500px;min-height:500px}.brand-name{font-size:19px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:.01ms!important}}
+
+</style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.174.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.174.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21V9m0 5L5 8m7 4 7-8M7 13l-4-3m13 0 4-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="5" cy="6" r="2" fill="currentColor"/><circle cx="19" cy="3" r="2" fill="currentColor"/><circle cx="20" cy="8" r="2" fill="currentColor"/></svg></div>
+        <div><div class="brand-name">CANOPY<span>STUDIO</span></div><div class="brand-sub">PROCEDURAL VEGETATION ENGINE <b>01</b></div></div>
+      </div>
+      <div class="top-right"><span class="project-tag">DESERT PALISADES / T2</span><div class="vert-sep"></div><span class="save-indicator"><span class="dot"></span> ENGINE READY</span><a class="top-link" href="https://github.com/dgreenheck/ez-tree" target="_blank" rel="noopener noreferrer" title="Reference project">RESEARCH ↗</a></div>
+    </header>
+
+    <div class="workspace">
+      <aside class="left-panel" aria-label="Tree parameters">
+        <div class="panel-heading"><span class="tiny-label">SPECIES LIBRARY / 001</span><span class="count-tag">01 TREE</span></div>
+        <div class="species-tile"><div class="tree-glyph">✳</div><div><b>Littleleaf Palo Verde</b><em>Parkinsonia microphylla</em><small>MARK T2 · FOOTHILL PALO VERDE</small></div></div>
+        <div class="block-title"><span>01</span> GENERATION</div>
+        <div class="field split"><label for="seed">SEED <span class="field-tip">Repeatable variation</span></label><div class="seed-wrap"><input id="seed" data-key="seed" type="number" min="1" max="2147483647" step="1" value="241106" /><button class="mini-button" id="reseed" title="New random seed" aria-label="Randomize seed">↻</button></div></div>
+        <div class="field"><div class="field-row"><label for="height">TARGET HEIGHT</label><output id="height-val">6.10 m</output></div><input id="height" data-key="height" type="range" min="3" max="9" step="0.05" value="6.1" /><div class="range-ends"><span>3.0 M</span><span>9.0 M</span></div></div>
+        <div class="field"><div class="field-row"><label for="trunks">MAIN TRUNKS</label><output id="trunks-val">3</output></div><input id="trunks" data-key="trunks" type="range" min="1" max="5" step="1" value="3" /></div>
+        <div class="field"><div class="field-row"><label for="spread">CANOPY SPREAD</label><output id="spread-val">100%</output></div><input id="spread" data-key="spread" type="range" min="0.6" max="1.6" step="0.05" value="1" /></div>
+        <div class="block-title"><span>02</span> BRANCH STRUCTURE</div>
+        <div class="field"><div class="field-row"><label for="branchDensity">PRIMARY BRANCH DENSITY</label><output id="branchDensity-val">100%</output></div><input id="branchDensity" data-key="branchDensity" type="range" min="0.5" max="1.55" step="0.05" value="1" /></div>
+        <div class="field"><div class="field-row"><label for="complexity">TWIG COMPLEXITY</label><output id="complexity-val">100%</output></div><input id="complexity" data-key="complexity" type="range" min="0.5" max="1.5" step="0.05" value="1" /></div>
+        <div class="field"><div class="field-row"><label for="gnarl">ORGANIC TWIST</label><output id="gnarl-val">35%</output></div><input id="gnarl" data-key="gnarl" type="range" min="0" max="1" step="0.05" value="0.35" /></div>
+        <div class="block-title"><span>03</span> FOLIAGE & FLOWERS</div>
+        <div class="field"><div class="field-row"><label for="foliage">LEAF DENSITY</label><output id="foliage-val">58%</output></div><input id="foliage" data-key="foliage" type="range" min="0" max="1" step="0.02" value="0.58" /></div>
+        <div class="field"><div class="field-row"><label for="leafletSize">LEAFLET SCALE</label><output id="leafletSize-val">100%</output></div><input id="leafletSize" data-key="leafletSize" type="range" min="0.65" max="2" step="0.05" value="1" /></div>
+        <div class="field"><div class="field-row"><label for="bloom">SPRING FLOWERS</label><output id="bloom-val">0%</output></div><input id="bloom" data-key="bloom" type="range" min="0" max="1" step="0.05" value="0" /></div>
+        <div class="field"><label for="season">SEASONAL STATE</label><select id="season" data-key="season"><option value="after-rain">AFTER RAIN / PARTLY LEAFED</option><option value="dry">DRY SEASON / SPARSE</option></select></div>
+        <div class="block-title"><span>04</span> GENERATION QUALITY</div>
+        <div class="field"><label for="quality">MESH DETAIL LEVEL</label><select id="quality" data-key="quality"><option value="draft">DRAFT / QUICK</option><option value="presentation" selected>PRESENTATION / BALANCED</option><option value="high">HIGH DETAIL / EXPORT</option></select></div>
+        <div class="left-actions"><button id="generate" class="button solid"><span>✳</span> REGENERATE TREE</button><button id="reset" class="button ghost">RESET PARAMETERS</button></div>
+      </aside>
+
+      <main class="viewport-area">
+        <div class="viewer-top"><div class="breadcrumb">LIVE MODEL <span>/</span> T2 <span>/</span> <b>PROCEDURAL PREVIEW</b></div><div class="viewer-commands"><button id="toggle-grid" class="tool-icon active" aria-pressed="true" title="Toggle floor grid">▦</button><button id="toggle-wireframe" class="tool-icon" aria-pressed="false" title="Toggle wireframe">◇</button><button id="fit" class="tool-icon" title="Frame the tree">⛶</button></div></div>
+        <div id="viewer" role="img" aria-label="Interactive 3D preview of a procedural Littleleaf Palo Verde tree"></div>
+        <div class="canvas-overlay top-left"><span class="live-badge"><span class="pulse"></span> LIVE 3D SCENE</span><h1>Littleleaf<br><i>Palo Verde.</i></h1><p>Species-specific branching, living green bark, compound leaflets. Generated from a seed, not a scanned model.</p></div>
+        <div class="canvas-overlay top-right"><div class="mini-meta"><span>MODEL</span><strong>T2 / P. MICROPHYLLA</strong></div><div class="mini-meta"><span>UNIT SYSTEM</span><strong>METRIC · METRES</strong></div><div class="mini-meta"><span>GEOMETRY</span><strong>REAL MESH / PBR</strong></div></div>
+        <div class="canvas-overlay bottom-left"><div class="axis-widget"><span class="axis y">Y</span><span class="axis x">X</span><span class="axis z">Z</span></div><span>ORBIT DRAG · SCROLL ZOOM · RIGHT DRAG PAN</span></div>
+        <div class="canvas-overlay bottom-right"><span class="dimension-icon">↕</span><div><b id="dimension-label">6.10 m</b><small>MODEL HEIGHT</small></div></div>
+        <div id="loading" class="loading-screen"><div class="loading-logo">✳</div><strong>GROWING PROCEDURAL GEOMETRY</strong><span>Constructing trunks, branching hierarchy, leaflets & textures…</span></div>
+        <div id="toast" class="toast" aria-live="polite"></div>
+        <div class="bottom-ribbon"><span class="ribbon-dot"></span><b>SEED-DRIVEN GENERATOR</b><span>ALL GEOMETRY GENERATED IN BROWSER</span><span class="ribbon-right">VIEW: PERSPECTIVE</span></div>
+      </main>
+
+      <aside class="right-panel" aria-label="Model statistics and materials">
+        <div class="panel-heading"><span class="tiny-label">ASSET INSPECTOR</span><span class="inspector-icon">◈</span></div>
+        <div class="inspector-intro"><span class="eyebrow">SPECIMEN / T2</span><h2>Tree anatomy<span>.</span></h2><p>One fully procedural asset. Tunable branch architecture and embedded texture maps.</p></div>
+        <div class="inspector-section"><div class="inspector-title">MODEL METRICS <span>01—05</span></div><div class="metric-grid"><div class="metric"><b id="stat-height">6.10</b><span>HEIGHT / M</span></div><div class="metric"><b id="stat-width">—</b><span>SPREAD / M</span></div><div class="metric"><b id="stat-branches">—</b><span>BRANCHES</span></div><div class="metric"><b id="stat-leaves">—</b><span>LEAFLETS</span></div></div><div class="triangles-line"><span>TRIANGLE COUNT</span><b id="stat-tris">—</b></div><div class="triangles-line"><span>THORN DETAILS</span><b id="stat-thorns">—</b></div></div>
+        <div class="inspector-section"><div class="inspector-title">PROCEDURAL MATERIALS <span>PBR</span></div><div class="texture-card"><canvas id="bark-thumb" width="128" height="128" aria-label="Generated green bark texture preview"></canvas><div><b>LIVING GREEN BARK</b><small>ALBEDO · NORMAL · ROUGHNESS</small><span class="tiny-green">GENERATED MAPS</span></div></div><div class="texture-card"><canvas id="leaf-thumb" width="128" height="128" aria-label="Generated leaflet texture preview"></canvas><div><b>COMPOUND LEAFLET</b><small>ALPHA CUTOUT · ROUGHNESS</small><span class="tiny-green">GENERATED MAPS</span></div></div><p class="material-note">All textures are synthesized locally. No reference photographs or purchased image assets are embedded.</p></div>
+        <div class="inspector-section export-section"><div class="inspector-title">EXPORT MODEL <span>01/01</span></div><button id="export-glb" class="button export"><span class="download-symbol">↓</span><span><b>EXPORT 3D MODEL</b><small>GLB · EMBEDDED PBR TEXTURES</small></span><span class="arrow-symbol">↗</span></button><div class="secondary-buttons"><button id="export-png">SAVE PNG VIEW</button><button id="export-json">SAVE RECIPE JSON</button></div><p class="material-note">GLB is in metres and Y-up. For SketchUp, import through a compatible glTF workflow or convert via Blender.</p></div>
+        <div class="project-foot"><div class="foot-mark">✳</div><div><b>DESERT PALISADES · STEVE</b><span>SPECIMEN T2 / INITIAL R&amp;D BUILD</span></div></div>
+      </aside>
+    </div>
+  </div>
+  <script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+/*
+ * Littleleaf Palo Verde | Species-specific procedural tree generator
+ * Original implementation. Measurements use metres, Y-up. No external textures.
+ * Geometry and PBR maps are exportable as glTF/GLB.
+ */
+const SPECIES = Object.freeze({
+  code: 'T2', name: 'Littleleaf Palo Verde', scientific: 'Parkinsonia microphylla',
+  targetHeight: 6.10, source: 'Desert Palisades, Russell Proo planting selection 04 Nov 2026'
+});
+
+const DEFAULTS = Object.freeze({
+  seed: 241106, height: 6.10, trunks: 3, spread: 1.0,
+  branchDensity: 1, complexity: 1, gnarl: 0.35,
+  foliage: 0.58, leafletSize: 1.0, bloom: 0,
+  quality: 'presentation', season: 'after-rain'
+});
+
+const QUALITY = {
+  draft: { twigFactor: 0.52, leafFactor: 0.48, tubeSides: 5, tubeSections: 5 },
+  presentation: { twigFactor: 1.0, leafFactor: 1.0, tubeSides: 7, tubeSections: 7 },
+  high: { twigFactor: 1.2, leafFactor: 1.42, tubeSides: 9, tubeSections: 10 }
+};
+
+function mulberry32(seed) {
+  let s = (Number(seed) || 1) >>> 0;
+  return () => { s += 0x6D2B79F5; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function rand(rng, a, b) { return a + rng() * (b - a); }
+function randomDirection(rng, rise = 0.2) {
+  const a = rng() * Math.PI * 2;
+  return new THREE.Vector3(Math.cos(a), rise, Math.sin(a)).normalize();
+}
+function hash(i, j, seed) {
+  let h = Math.imul((i | 0) ^ (seed | 0), 374761393) + Math.imul(j | 0, 668265263);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+}
+const smooth = t => t * t * (3 - 2 * t);
+function periodicNoise(x, y, nx, ny, seed) {
+  const x0 = Math.floor(x), y0 = Math.floor(y), fx = smooth(x - x0), fy = smooth(y - y0);
+  const m = (v,n) => (v % n + n) % n;
+  const v00 = hash(m(x0,nx),m(y0,ny),seed), v10 = hash(m(x0+1,nx),m(y0,ny),seed);
+  const v01 = hash(m(x0,nx),m(y0+1,ny),seed), v11 = hash(m(x0+1,nx),m(y0+1,ny),seed);
+  return (v00*(1-fx)+v10*fx)*(1-fy) + (v01*(1-fx)+v11*fx)*fy;
+}
+function canvasPixels(w, h, paint) {
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d', {willReadFrequently: true});
+  if (!ctx) throw new Error('Canvas 2D is required to generate the plant textures.');
+  const data = ctx.createImageData(w,h), p=data.data;
+  for(let y=0; y<h; y++) for(let x=0; x<w; x++) {
+    const c = paint(x,y,w,h); const i=(y*w+x)*4;
+    p[i]=c[0];p[i+1]=c[1];p[i+2]=c[2];p[i+3]=c.length>3?c[3]:255;
+  }
+  ctx.putImageData(data,0,0); return canvas;
+}
+function canvasTexture(canvas, color=false) {
+  const t=new THREE.CanvasTexture(canvas); t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.colorSpace=color?THREE.SRGBColorSpace:THREE.NoColorSpace;
+  t.anisotropy=8; t.needsUpdate=true; return t;
+}
+function makeBarkTextures(seed) {
+  const w=512,h=1024, heights=new Float32Array(w*h);
+  const bark=canvasPixels(w,h,(x,y)=>{
+    const u=x/w,v=y/h;
+    // Seamless directional streaks + fine pores on smooth living green bark.
+    const broad=periodicNoise(u*8,v*16,8,16,seed), fine=periodicNoise(u*56,v*96,56,96,seed+3);
+    const flow=Math.sin(2*Math.PI*(u*15 + 0.03*Math.sin(v*10*Math.PI))) * 0.5+0.5;
+    const scars=periodicNoise(u*32,v*64,32,64,seed+19);
+    const variation = 0.52*broad+0.26*fine+0.14*flow+0.08*scars;
+    heights[y*w+x]=variation;
+    const dark=clamp(variation,0,1);
+    return [Math.round(97+58*dark),Math.round(117+51*dark),Math.round(48+40*dark),255];
+  });
+  const normal=canvasPixels(w,h,(x,y)=>{
+    const xm=(x+w-1)%w, xp=(x+1)%w,ym=(y+h-1)%h,yp=(y+1)%h;
+    const dx=(heights[y*w+xp]-heights[y*w+xm])*1.1;
+    const dy=(heights[yp*w+x]-heights[ym*w+x])*1.1;
+    const len=Math.hypot(dx,dy,1);return [127.5-dx/len*127,127.5-dy/len*127,127.5+1/len*127,255];
+  });
+  const roughness=canvasPixels(w,h,(x,y)=>{const a=0.77+heights[y*w+x]*0.21;const k=Math.round(a*255);return [k,k,k,255];});
+  return {color:canvasTexture(bark,true),normal:canvasTexture(normal),roughness:canvasTexture(roughness),previews:{bark:bark.toDataURL('image/png')}};
+}
+function makeLeafTextures(seed) {
+  const w=256,h=256;
+  const leaf=canvasPixels(w,h,(x,y)=>{
+    const u=(x-w*.5)/(w*.5), v=(y-h*.5)/(h*.5);
+    // Symmetrical small elliptic leaflet with an analytic alpha silhouette.
+    const r=u*u*1.03+v*v*1.12; const a=clamp((1.0-r)*24,0,1);
+    const stripe=Math.exp(-Math.abs(u)*47)*(0.13+0.1*Math.cos(v*15));
+    const n=periodicNoise(x/32,y/32,8,8,seed+51)-.5;
+    const edge=0.12*Math.max(0,r-.6);
+    return [Math.round(124+stripe*90+20*n-edge*70),Math.round(151+stripe*67+18*n-edge*60),Math.round(71+stripe*39+12*n),Math.round(a*255)];
+  });
+  const roughness=canvasPixels(w,h,(x,y)=>{const v=220+22*periodicNoise(x/32,y/32,8,8,seed);return [v,v,v,255];});
+  return {color:canvasTexture(leaf,true),roughness:canvasTexture(roughness),previews:{leaf:leaf.toDataURL('image/png')}};
+}
+
+class GeometryWriter {
+  constructor() {this.positions=[];this.normals=[];this.uv=[];this.colors=[];this.indices=[];}
+  vert(p,n,uv,color){this.positions.push(p.x,p.y,p.z);this.normals.push(n.x,n.y,n.z);this.uv.push(uv[0],uv[1]);this.colors.push(color[0],color[1],color[2]);return this.positions.length/3-1;}
+  tri(a,b,c){this.indices.push(a,b,c);}
+  mesh(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(this.positions,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(this.normals,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(this.uv,2));g.setAttribute('color',new THREE.Float32BufferAttribute(this.colors,3));g.setIndex(this.indices);g.computeBoundingSphere();return g;}
+}
+function appendTube(writer, points, startRadius, endRadius, sides, color, uvScale=1) {
+  const base=writer.positions.length/3;const n=points.length;
+  if(n<2)return;
+  let lengthAlong=0;
+  for(let i=0;i<n;i++) {
+    const tangent=points[Math.min(n-1,i+1)].clone().sub(points[Math.max(0,i-1)]).normalize();
+    if(tangent.lengthSq()<1e-8)tangent.set(0,1,0);
+    const helper=Math.abs(tangent.y)<.93?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0);
+    const right=new THREE.Vector3().crossVectors(tangent,helper).normalize();
+    const forward=new THREE.Vector3().crossVectors(tangent,right).normalize();
+    const t=i/(n-1), radius=Math.max(0.0003,startRadius*(1-t)+endRadius*t);
+    if(i>0) lengthAlong+=points[i].distanceTo(points[i-1]);
+    for(let k=0;k<=sides;k++) {
+      const a=2*Math.PI*k/sides;
+      const normal=right.clone().multiplyScalar(Math.cos(a)).addScaledVector(forward,Math.sin(a));
+      writer.vert(points[i].clone().addScaledVector(normal,radius),normal,[k/sides*1.8,lengthAlong/Math.max(.025,uvScale)],color);
+    }
+  }
+  for(let i=0;i<n-1;i++)for(let k=0;k<sides;k++){
+    const a=base+i*(sides+1)+k,b=a+sides+1;
+    writer.tri(a,b,a+1);writer.tri(a+1,b,b+1);
+  }
+}
+function makePath(start,dir,len,sections,gnarl,rng,upWeight=0.15) {
+  const points=[start.clone()];let p=start.clone();let d=dir.clone().normalize();
+  const twist=new THREE.Vector3(rand(rng,-1,1),rand(rng,-.3,.6),rand(rng,-1,1)).normalize();
+  const bend=rand(rng,-gnarl,gnarl);
+  for(let i=1;i<=sections;i++) {
+    const t=i/sections;
+    d.addScaledVector(twist,bend*0.10).add(new THREE.Vector3(rand(rng,-.04,.04)*gnarl,upWeight/sections,rand(rng,-.04,.04)*gnarl)).normalize();
+    p=p.clone().addScaledVector(d,len/sections);points.push(p);
+  }
+  return points;
+}
+const pointAt=(points,t)=>{ const x=clamp(t,0,1)*(points.length-1);const k=Math.min(points.length-2,Math.floor(x));return points[k].clone().lerp(points[k+1],x-k); };
+const tangentAt=(points,t)=>{const k=Math.min(points.length-2,Math.floor(clamp(t,0,1)*(points.length-1)));return points[k+1].clone().sub(points[k]).normalize();};
+function createLeafCard(writer, origin, direction, width, length, color, rng) {
+  const dir=direction.clone().normalize();
+  const right=new THREE.Vector3().crossVectors(dir,new THREE.Vector3(rand(rng,-1,1),rand(rng,-1,1),rand(rng,-1,1))).normalize();
+  if(right.lengthSq()<1e-6)right.set(1,0,0);
+  const normal=new THREE.Vector3().crossVectors(right,dir).normalize();
+  const near=origin.clone(), tip=origin.clone().addScaledVector(dir,length);
+  const p0=near.clone().addScaledVector(right,-width*.47),p1=near.clone().addScaledVector(right,width*.47);
+  const p2=tip.clone().addScaledVector(right,width*.45),p3=tip.clone().addScaledVector(right,-width*.45);
+  const a=writer.vert(p0,normal,[0,0],color), b=writer.vert(p1,normal,[1,0],color);
+  const c=writer.vert(p2,normal,[1,1],color), d=writer.vert(p3,normal,[0,1],color);
+  writer.tri(a,b,d);writer.tri(b,c,d);
+}
+function disposeTextures(p){for(const k of ['color','normal','roughness'])p[k].dispose();}
+
+function generateTree(input={}) {
+  const opts={...DEFAULTS,...input};
+  const quality=QUALITY[opts.quality]||QUALITY.presentation;
+  const rng=mulberry32(opts.seed);const wood=new GeometryWriter(),leaves=new GeometryWriter(),flowers=new GeometryWriter();
+  const palettes={base:[0.96,0.99,0.81],large:[0.82,0.93,0.75],small:[0.75,0.97,0.75]};
+  const stats={trunks:opts.trunks,branches:0,terminalTwigs:0,leaflets:0,flowerPetals:0,thorns:0,triangles:0,vertices:0,height:opts.height};
+  const wantLeaves=opts.foliage*(opts.season==='dry'?0.22:1.0);
+  const nTrunks=clamp(Math.round(opts.trunks),1,5);
+  const complexity=clamp(opts.complexity,.5,1.5);
+  const treeHeight=6.10;
+  const addBranch=(points,rad,rEnd,level)=>{
+    const sides=Math.max(4,Math.round(quality.tubeSides*(level>2?.72:1)));
+    appendTube(wood,points,rad,rEnd,sides,level<1?palettes.base:level<3?palettes.large:palettes.small,Math.max(.045,rad*4));
+    stats.branches++;
+  };
+  // A rachis carries 4–8 paired small leaflets, as documented for P. microphylla.
+  function addFoliageSpray(origin,forward){
+    if(rng()>wantLeaves)return;
+    const nPairs=Math.round(rand(rng,4,9)), length=rand(rng,.08,.17);
+    const dir=forward.clone().add(new THREE.Vector3(rand(rng,-.3,.3),rand(rng,-.08,.35),rand(rng,-.3,.3))).normalize();
+    const end=origin.clone().addScaledVector(dir,length);
+    appendTube(wood,[origin,origin.clone().lerp(end,.5),end],.0023,.0007,4,palettes.small,.12);
+    const side=new THREE.Vector3().crossVectors(dir,new THREE.Vector3(0,1,0)).normalize();
+    if(side.lengthSq()<.001)side.set(1,0,0);
+    for(let i=0;i<nPairs;i++){
+      const t=(i+.7)/(nPairs+1),stem=origin.clone().lerp(end,t);
+      for(const sign of [-1,1]){
+        if(rng()>clamp(wantLeaves*1.25,0,1))continue;
+        const d=side.clone().multiplyScalar(sign).addScaledVector(dir,rand(rng,.13,.46)).add(new THREE.Vector3(0,rand(rng,-.24,.32),0)).normalize();
+        const size=rand(rng,.012,.022)*opts.leafletSize;
+        const leafColor=[rand(rng,.81,1.0),rand(rng,.84,1.0),rand(rng,.79,.96)];
+        const st=stem.clone().addScaledVector(d,.004);
+        createLeafCard(leaves,st,d,size*.75,size,leafColor,rng);stats.leaflets++;
+      }
+    }
+  }
+  function addBlossom(origin,dir){
+    if(opts.bloom<=.001||rng()>opts.bloom*.13)return;
+    const center=origin.clone().addScaledVector(dir,.014);const outward=dir.clone().normalize();
+    const side=new THREE.Vector3().crossVectors(outward,new THREE.Vector3(0,1,0)).normalize();
+    if(side.lengthSq()<.01)side.set(1,0,0);
+    const up=new THREE.Vector3().crossVectors(side,outward).normalize();
+    for(let i=0;i<5;i++){
+      const a=i/5*Math.PI*2;
+      const p=center.clone().addScaledVector(side,Math.cos(a)*.009).addScaledVector(up,Math.sin(a)*.009);
+      const v=side.clone().multiplyScalar(Math.cos(a)).addScaledVector(up,Math.sin(a));
+      createLeafCard(flowers,p,v,.014,.017,i===4?[1,1,.84]:[1,.91,.44],rng);stats.flowerPetals++;
+    }
+  }
+  // Growing from the base: individual stems spread organically, rather than a single cylindrical trunk.
+  for(let s=0;s<nTrunks;s++){
+    const a=(s/nTrunks)*Math.PI*2+rand(rng,-.5,.5);
+    const origin=new THREE.Vector3(rand(rng,-.12,.12),0,rand(rng,-.12,.12));
+    const dir=new THREE.Vector3(Math.cos(a)*rand(rng,.13,.42),1,Math.sin(a)*rand(rng,.13,.42)).normalize();
+    const mainLen=rand(rng,3.15,3.8);
+    const trunk=makePath(origin,dir,mainLen,quality.tubeSections+5,opts.gnarl*.6,rng,.45);
+    addBranch(trunk,rand(rng,.11,.18)/Math.sqrt(nTrunks/2),.032,0);
+    const primaryCount=Math.max(2,Math.round(rand(rng,5,8)*opts.branchDensity*complexity));
+    for(let i=0;i<primaryCount;i++){
+      const t=.29+(i+rng()*.8)/primaryCount*.68;
+      const base=pointAt(trunk,t);
+      const radial=(i/primaryCount)*Math.PI*2 + a + rand(rng,-.56,.56);
+      const tangent=tangentAt(trunk,t);
+      const v=new THREE.Vector3(Math.cos(radial)*opts.spread,rand(rng,.27,.68),Math.sin(radial)*opts.spread)
+        .addScaledVector(tangent,.24).normalize();
+      const length=rand(rng,1.9,2.65)*opts.spread;
+      const primary=makePath(base,v,length,quality.tubeSections+1,opts.gnarl,rng,.10);
+      addBranch(primary,rand(rng,.032,.062),.008,1);
+      const secondaries=Math.max(2,Math.round(rand(rng,3.5,5.8)*complexity));
+      for(let j=0;j<secondaries;j++){
+        const t2=.25+(j+rng()*.7)/secondaries*.69;
+        const p2=pointAt(primary,t2),tan=tangentAt(primary,t2);
+        const spin=(j/secondaries)*Math.PI*2+radial+rand(rng,-1.1,1.1);
+        const out=new THREE.Vector3(Math.cos(spin),rand(rng,.15,.65),Math.sin(spin))
+          .addScaledVector(tan,.7).normalize();
+        const secondary=makePath(p2,out,rand(rng,.78,1.36),Math.max(5,quality.tubeSections-1),opts.gnarl,rng,.07);
+        addBranch(secondary,rand(rng,.011,.020),.0031,2);
+        const twigs=Math.max(1,Math.round(rand(rng,2.3,4.8)*quality.twigFactor*complexity));
+        for(let k=0;k<twigs;k++){
+          const t3=.33+(k+rng()*.6)/twigs*.64;
+          const p3=pointAt(secondary,t3),tan3=tangentAt(secondary,t3);
+          const turn=rand(rng,0,Math.PI*2);
+          const b=new THREE.Vector3(Math.cos(turn)*.7,rand(rng,.12,.85),Math.sin(turn)*.7).addScaledVector(tan3,.85).normalize();
+          const twig=makePath(p3,b,rand(rng,.28,.67),Math.max(4,quality.tubeSections-2),opts.gnarl,rng,.05);
+          addBranch(twig,.0048,.0007,3);stats.terminalTwigs++;
+          // Thorns occasionally emerge near twig axils.
+          if(rng()<.28){
+            const thornBase=pointAt(twig,rand(rng,.15,.45));
+            const thornDir=new THREE.Vector3(rand(rng,-1,1),rand(rng,.02,.45),rand(rng,-1,1)).normalize();
+            appendTube(wood,[thornBase,thornBase.clone().addScaledVector(thornDir,rand(rng,.02,.06))],.002,.00015,4,palettes.small,.035);
+            stats.thorns++;
+          }
+          const sprayCount=Math.round(rand(rng,1.5,4.2)*quality.leafFactor);
+          for(let m=0;m<sprayCount;m++){
+            const position=pointAt(twig,rand(rng,.54,1));
+            const direct=tangentAt(twig,rand(rng,.65,.95));
+            addFoliageSpray(position,direct);
+            if(m===0)addBlossom(position,direct);
+          }
+        }
+      }
+    }
+  }
+  const bark=makeBarkTextures(opts.seed),leaf=makeLeafTextures(opts.seed);
+  const woodGeometry=wood.mesh(),leafGeometry=leaves.mesh(),flowerGeometry=flowers.mesh();
+  const barkMat=new THREE.MeshStandardMaterial({name:'PaloVerde_LivingBark_PBR',map:bark.color,normalMap:bark.normal,normalScale:new THREE.Vector2(.19,.19),roughnessMap:bark.roughness,roughness:1,vertexColors:true,metalness:0});
+  const leafMat=new THREE.MeshStandardMaterial({name:'PaloVerde_Leaflet_AlphaPBR',map:leaf.color,roughnessMap:leaf.roughness,roughness:1,vertexColors:true,transparent:false,alphaTest:.39,side:THREE.DoubleSide,metalness:0});
+  const flowerMat=new THREE.MeshStandardMaterial({name:'PaloVerde_PaleYellow_Flowers',color:0xffffd2,roughness:.85,vertexColors:true,side:THREE.DoubleSide});
+  const group=new THREE.Group();group.name=`T2_Littleleaf_Palo_Verde_${opts.seed}`;
+  function mesh(geo,mat,name){const m=new THREE.Mesh(geo,mat);m.name=name;m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
+  mesh(woodGeometry,barkMat,'Trunks_Branches_Twigs');
+  if(stats.leaflets)mesh(leafGeometry,leafMat,'Compound_Leaflets');else leafGeometry.dispose();
+  if(stats.flowerPetals)mesh(flowerGeometry,flowerMat,'Optional_Spring_Flowers');else flowerGeometry.dispose();
+  const box=new THREE.Box3().setFromObject(group);const rawHeight=box.max.y-box.min.y;
+  const scale=opts.height/Math.max(.01,rawHeight);
+  group.scale.setScalar(scale);
+  group.position.y=-box.min.y*scale;
+  const finalBox=new THREE.Box3().setFromObject(group);
+  stats.height=Number((finalBox.max.y-finalBox.min.y).toFixed(3));
+  stats.width=Number((finalBox.max.x-finalBox.min.x).toFixed(2));
+  stats.depth=Number((finalBox.max.z-finalBox.min.z).toFixed(2));
+  stats.triangles=wood.indices.length/3+leaves.indices.length/3+flowers.indices.length/3;
+  stats.vertices=wood.positions.length/3+leaves.positions.length/3+flowers.positions.length/3;
+  const dispose=()=>{group.traverse(o=>{if(o.isMesh){o.geometry.dispose();o.material.dispose();}});disposeTextures(bark);disposeTextures(leaf);};
+  return {group,stats,texturePreviews:{...bark.previews,...leaf.previews},dispose};
+}
+
+const $ = id => document.getElementById(id);
+const container=$('viewer'), loading=$('loading'), toastEl=$('toast');
+const settings={...DEFAULTS};
+const scene=new THREE.Scene();scene.background=new THREE.Color('#e6ede7');scene.fog=new THREE.Fog('#e6ede7',24,54);
+const camera=new THREE.PerspectiveCamera(38,1,.025,160);
+camera.position.set(12,7,13);
+let renderer, orbit, current=null, scheduled=null, toastTimer=null, processing=false, queued=false, showGrid=true, showWire=false;
+
+function showToast(message,error=false){
+  toastEl.textContent=message;toastEl.style.background=error?'#743f35':'#234731';toastEl.classList.add('visible');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('visible'),3400);
+}
+function downloadBlob(data,name,type='application/octet-stream'){
+  const blob=data instanceof Blob?data:new Blob([data],{type});
+  const href=URL.createObjectURL(blob);const link=document.createElement('a');link.href=href;link.download=name;
+  document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(href),10000);
+}
+function updateLabels(){
+  const format={height:v=>Number(v).toFixed(2)+' m',trunks:v=>String(Math.round(v)),spread:v=>Math.round(v*100)+'%',branchDensity:v=>Math.round(v*100)+'%',complexity:v=>Math.round(v*100)+'%',gnarl:v=>Math.round(v*100)+'%',foliage:v=>Math.round(v*100)+'%',leafletSize:v=>Math.round(v*100)+'%',bloom:v=>Math.round(v*100)+'%'};
+  for(const [key,fn] of Object.entries(format)){$(key+'-val').textContent=fn(settings[key]);}
+}
+function readInputs(){
+  for(const element of document.querySelectorAll('[data-key]')){
+    const key=element.dataset.key;
+    if(key==='seed')settings[key]=Math.max(1,Math.trunc(Number(element.value)||1));
+    else if(element.type==='range')settings[key]=Number(element.value);
+    else settings[key]=element.value;
+  }
+  updateLabels();
+}
+function syncInputs(){
+  for(const element of document.querySelectorAll('[data-key]'))element.value=settings[element.dataset.key];
+  updateLabels();
+}
+function setTexturePreview(id,data){
+  const img=new Image();img.onload=()=>{const canvas=$(id);if(!canvas)return;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);};img.src=data;
+}
+function formatInt(n){return Math.round(n).toLocaleString('en-US');}
+function metrics(stats){
+  $('stat-height').textContent=stats.height.toFixed(2);
+  $('stat-width').textContent=stats.width.toFixed(2);
+  $('stat-branches').textContent=formatInt(stats.branches);
+  $('stat-leaves').textContent=formatInt(stats.leaflets);
+  $('stat-tris').textContent=formatInt(stats.triangles);
+  $('stat-thorns').textContent=formatInt(stats.thorns);
+  $('dimension-label').textContent=stats.height.toFixed(2)+' m';
+}
+function frameTree(){
+  if(!current)return;
+  const b=new THREE.Box3().setFromObject(current.group),size=b.getSize(new THREE.Vector3());
+  const center=b.getCenter(new THREE.Vector3());
+  const distance=Math.max(size.y*1.65,size.x*1.7,10.5);
+  camera.position.set(center.x+distance*.85,center.y+distance*.37,center.z+distance*.99);
+  camera.near=.025;camera.far=220;camera.updateProjectionMatrix();
+  orbit.target.copy(center);orbit.update();
+}
+function syncWire(){if(!current)return;current.group.traverse(node=>{if(node.isMesh){node.material.wireframe=showWire;}});}
+function doGenerate(frame=false){
+  if(processing){queued=true;return;}
+  processing=true;$('generate').disabled=true;
+  try{
+    readInputs();
+    const next=generateTree(settings);
+    // Keep existing geometry until the next model is successfully generated.
+    const prev=current;current=next;scene.add(current.group);
+    if(prev){scene.remove(prev.group);prev.dispose();}
+    metrics(current.stats);setTexturePreview('bark-thumb',next.texturePreviews.bark);setTexturePreview('leaf-thumb',next.texturePreviews.leaf);
+    syncWire();if(frame)frameTree();
+    loading.classList.add('hidden');
+  }catch(e){console.error('Procedural tree generation failed:',e);loading.classList.add('hidden');showToast('Generation error: '+e.message,true);}
+  finally{processing=false;$('generate').disabled=false;if(queued){queued=false;requestGenerate(0);}}
+}
+function requestGenerate(ms=180){clearTimeout(scheduled);scheduled=setTimeout(()=>doGenerate(false),ms);}
+function initScene(){
+  if(!window.WebGLRenderingContext){throw new Error('WebGL unavailable. Open this website in a WebGL-capable browser.');}
+  renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,preserveDrawingBuffer:true,powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.37;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+  orbit=new OrbitControls(camera,renderer.domElement);
+  orbit.enableDamping=true;orbit.dampingFactor=.075;orbit.minDistance=2;orbit.maxDistance=42;
+  orbit.maxPolarAngle=Math.PI*.51;orbit.target.set(0,2.9,0);
+  scene.add(new THREE.HemisphereLight(0xf7f9e8,0x758779,2.1));
+  const sun=new THREE.DirectionalLight(0xffedbc,2.7);
+  sun.position.set(-4,12,8);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.camera.left=-13;sun.shadow.camera.right=13;sun.shadow.camera.top=13;sun.shadow.camera.bottom=-13;
+  sun.shadow.bias=-.0008;sun.shadow.normalBias=.009;scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xc4e2ee,.85);fill.position.set(8,5,-7);scene.add(fill);
+  const groundGeo=new THREE.CircleGeometry(20,96);groundGeo.rotateX(-Math.PI/2);
+  const ground=new THREE.Mesh(groundGeo,new THREE.MeshStandardMaterial({color:0xdee8d9,roughness:1,metalness:0}));
+  ground.name='PreviewGround_NotIncludedInExport';ground.receiveShadow=true;ground.position.y=-.012;scene.add(ground);
+  const grid=new THREE.GridHelper(36,36,0xa5b6a2,0xc5d3c3);grid.position.y=.003;grid.material.opacity=.26;grid.material.transparent=true;grid.name='PreviewGrid_NotIncludedInExport';scene.add(grid);
+  $('toggle-grid').addEventListener('click',()=>{showGrid=!showGrid;grid.visible=showGrid;$('toggle-grid').classList.toggle('active',showGrid);$('toggle-grid').setAttribute('aria-pressed',showGrid);});
+  $('toggle-wireframe').addEventListener('click',()=>{showWire=!showWire;syncWire();$('toggle-wireframe').classList.toggle('active',showWire);$('toggle-wireframe').setAttribute('aria-pressed',showWire);});
+  $('fit').addEventListener('click',frameTree);
+  const resize=()=>{const width=Math.max(1,container.clientWidth),height=Math.max(1,container.clientHeight);
+    camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);};
+  new ResizeObserver(resize).observe(container);resize();
+  function animate(){requestAnimationFrame(animate);orbit.update();renderer.render(scene,camera);}animate();
+}
+
+async function exportGLB(){
+  if(!current){showToast('Generate a tree before exporting.',true);return;}
+  const btn=$('export-glb');btn.disabled=true;
+  const original=$('toggle-wireframe').getAttribute('aria-pressed')==='true';
+  try{
+    // Wireframe is for viewport diagnostics only, not glTF material output.
+    if(original){showWire=false;syncWire();}
+    showToast('Packing geometry and texture maps into GLB…');
+    const exporter=new GLTFExporter();
+    const data=await exporter.parseAsync(current.group,{binary:true,onlyVisible:true,maxTextureSize:2048,trs:true});
+    downloadBlob(data,`T2_Littleleaf_Palo_Verde_${settings.seed}_${settings.height.toFixed(2)}m.glb`,'model/gltf-binary');
+    showToast('GLB exported with embedded PBR materials.');
+  }catch(e){console.error(e);showToast('GLB export failed: '+e.message,true);}
+  finally{if(original){showWire=true;syncWire();}btn.disabled=false;}
+}
+function exportPNG(){
+  if(!renderer){showToast('Viewer is unavailable.',true);return;}
+  try{renderer.render(scene,camera);renderer.domElement.toBlob(blob=>{
+    if(!blob){showToast('Image export failed.',true);return;}
+    downloadBlob(blob,`T2_Palo_Verde_View_${settings.seed}.png`,'image/png');showToast('PNG viewport image saved.');
+  },'image/png',1);}catch(e){showToast('Image export failed: '+e.message,true);}
+}
+function exportJSON(){
+  const payload={schema:'canopy-studio/1.0',species:SPECIES,units:'metres',generator:'LittleleafPaloVerde',date:new Date().toISOString(),settings:{...settings},statistics:current?.stats??null};
+  downloadBlob(JSON.stringify(payload,null,2),`T2_Palo_Verde_Recipe_${settings.seed}.json`,'application/json');showToast('Procedural recipe saved.');
+}
+
+function registerEvents(){
+  for(const element of document.querySelectorAll('[data-key]')){
+    element.addEventListener(element.type==='range'?'input':'change',()=>{readInputs();requestGenerate(element.type==='range'?200:0);});
+  }
+  $('reseed').addEventListener('click',()=>{settings.seed=Math.floor(Math.random()*2147483646)+1;syncInputs();doGenerate(false);showToast('New variation generated.');});
+  $('generate').addEventListener('click',()=>{clearTimeout(scheduled);doGenerate(false);showToast('Tree regenerated with current parameters.');});
+  $('reset').addEventListener('click',()=>{Object.assign(settings,DEFAULTS);syncInputs();doGenerate(true);showToast('Original T2 preset restored.');});
+  $('export-glb').addEventListener('click',exportGLB);$('export-png').addEventListener('click',exportPNG);$('export-json').addEventListener('click',exportJSON);
+  document.addEventListener('keydown',e=>{if(e.target instanceof HTMLInputElement||e.target instanceof HTMLSelectElement)return;
+    if(e.key.toLowerCase()==='f')frameTree();if(e.key.toLowerCase()==='r')doGenerate(false);
+  });
+}
+try {initScene();registerEvents();syncInputs();doGenerate(true);window.__CANOPY_APP__={settings,getStats:()=>current?.stats,regenerate:()=>doGenerate(false)};}
+catch(e){console.error(e);loading.innerHTML='<div class="loading-logo">!</div><strong>3D VIEWER UNAVAILABLE</strong><span>Please enable WebGL or use an up-to-date desktop browser.</span>';showToast(e.message,true);}
+
+</script>
+</body>
+</html>
