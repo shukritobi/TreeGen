@@ -46,3 +46,11 @@ Full findings: [QA_REPORT.md](QA_REPORT.md).
 GLB uses metres and Y-up, with bark and leaf materials embedded. Import through a glTF-capable application such as Blender before bringing it into SketchUp. The generator does not export native SKP.
 
 Research: [EZ-Tree](https://github.com/dgreenheck/ez-tree), [SeedThree](https://github.com/SkyeShark/SeedThree), [Three.js GLTFExporter](https://threejs.org/docs/pages/GLTFExporter.html).
+
+## SketchUp 2026 fix · November 2026
+
+Earlier exported GLB models showed rectangular foliage cards and abrupt overlapping branch intersections after import into SketchUp. The website now exports **opaque, oval leaf geometry**, with no alpha cutout dependency, and uses parallel-transport frames for curved branch tubes. Branch starting points use a shallow embedded shoulder at their parent stems.
+
+The foliage mesh is approximately 3–5 mm per leaflet at default settings (before final height scaling); the slider permits visual exaggeration if required. Branch collars are a visual improvement and are **not yet a boolean-unioned, watertight skeleton**. Rendering quality in D5 and SketchUp should be checked with a fresh GLB export, because old exported models do not update themselves.
+
+Import in SketchUp 2026: **File → Import → GLB**, then check leaf silhouette close-up and the model’s total height of **6100 mm**.
